@@ -114,32 +114,43 @@ st.set_page_config(page_title=APP_NAME, page_icon="🔮", layout="wide", initial
 
 st.markdown("""
 <style>
+    /* Elegant deep slate/teal background — stays calm and readable whether
+       the viewer's system is in light or dark mode. */
     .stApp {
-        background: linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 45%, #fdf4ff 100%);
-        color: #0f172a;
+        background: linear-gradient(160deg, #0f2027 0%, #203a43 45%, #2c5364 100%);
+        color: #eef2f6;
     }
-    h1, h2, h3 { color: #0369a1 !important; font-weight: 700; }
+    h1, h2, h3 { color: #7dd3fc !important; font-weight: 700; }
+    p, label, span, div { color: #eef2f6; }
     .quote-box {
-        background: rgba(255,255,255,0.65);
-        border-left: 5px solid #f43f5e;
+        background: rgba(255,255,255,0.08);
+        border-left: 5px solid #fb7185;
         border-radius: 10px;
         padding: 20px 24px;
-        box-shadow: 0 4px 18px -6px rgba(15,23,42,0.15);
+        backdrop-filter: blur(4px);
+        box-shadow: 0 4px 18px -6px rgba(0,0,0,0.4);
     }
     .hero-panel {
-        background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
         border-radius: 18px;
         padding: 34px;
         color: #f8fafc;
         text-align: center;
-        box-shadow: 0 12px 28px -8px rgba(14,165,233,0.4);
+        box-shadow: 0 12px 28px -8px rgba(8,145,178,0.5);
     }
     .result-card {
-        background: rgba(255,255,255,0.75);
+        background: rgba(255,255,255,0.08);
         border-radius: 14px;
         padding: 22px 26px;
         margin-top: 10px;
-        box-shadow: 0 6px 20px -8px rgba(15,23,42,0.15);
+        backdrop-filter: blur(4px);
+        box-shadow: 0 6px 20px -8px rgba(0,0,0,0.4);
+    }
+    /* Keep Streamlit's own widgets (inputs, sidebar) readable on the dark base */
+    section[data-testid="stSidebar"] { background: rgba(15,32,39,0.85); }
+    .stTextInput input, .stTextInput>div>div, .stSelectbox>div>div {
+        background: rgba(255,255,255,0.9) !important;
+        color: #0f172a !important;
     }
 </style>
 """, unsafe_allow_html=True)
