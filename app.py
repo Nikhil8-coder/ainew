@@ -19,9 +19,38 @@ USER_DB_FILE = "users_database.json"
 ADMIN_PASSWORD = os.environ.get("CAREER_CHOICE_ADMIN_PASSWORD", "change-me-now")
 
 STREAMS = [
-    "Science (PCM)", "Science (PCB)", "Commerce", "Arts / Humanities",
-    "Engineering / CS", "Diploma / Polytechnic", "Undergraduate (other)", "Other",
+    "B.Tech / B.E. — Computer Science / IT",
+    "B.Tech / B.E. — Electronics / Electrical",
+    "B.Tech / B.E. — Mechanical Engineering",
+    "B.Tech / B.E. — Civil Engineering",
+    "B.Tech / B.E. — Chemical / Other Core Branch",
+    "B.Sc. — Science Degree",
+    "B.Com — Commerce Degree",
+    "B.A. — Arts / Humanities Degree",
+    "BBA / Management Degree",
+    "Diploma / Polytechnic",
+    "Civil Services Aspirant (UPSC / State PSC)",
+    "Class 11–12 (School, stream not yet decided)",
+    "Other",
 ]
+
+# Maps the detailed stream a student picks at signup to the broader category
+# the recommendation logic and knowledge base reason about.
+STREAM_CATEGORY = {
+    "B.Tech / B.E. — Computer Science / IT": "Engineering / CS",
+    "B.Tech / B.E. — Electronics / Electrical": "Engineering / CS",
+    "B.Tech / B.E. — Mechanical Engineering": "Engineering / CS",
+    "B.Tech / B.E. — Civil Engineering": "Civil Engineering",
+    "B.Tech / B.E. — Chemical / Other Core Branch": "Engineering / CS",
+    "B.Sc. — Science Degree": "Science (PCM)",
+    "B.Com — Commerce Degree": "Commerce",
+    "B.A. — Arts / Humanities Degree": "Arts / Humanities",
+    "BBA / Management Degree": "Commerce",
+    "Diploma / Polytechnic": "Diploma / Polytechnic",
+    "Civil Services Aspirant (UPSC / State PSC)": "Civil Services",
+    "Class 11–12 (School, stream not yet decided)": "Other",
+    "Other": "Other",
+}
 
 # ==============================================================================
 # KNOWLEDGE BASE — production rules mapping trait combinations to careers.
@@ -95,6 +124,38 @@ KNOWLEDGE_BASE = {
         "trend_now": "Rising demand for short-form video and AI-assisted content workflows.",
         "trend_10y": "AI drafts routine content; human value shifts toward original ideas, judgment, and voice."
     },
+    "civil_services": {
+        "title": "Civil Services — Administrative, Police & Foreign Service (UPSC / State PSC)",
+        "logic_expression": "Public_Service_Interest AND Strong_GK AND High_Communication",
+        "relevant_streams": ["Civil Services", "Arts / Humanities", "Commerce"],
+        "prereqs": [
+            "Prelims syllabus: Polity, Economy, History, Geography, Environment",
+            "Daily current-affairs reading (newspaper + monthly compilations)",
+            "Mains answer-writing practice (structured, time-bound)",
+            "Optional subject mastery + mock interviews for Personality Test",
+        ],
+        "if_taken": "Access to some of the most influential public-leadership roles in the country (IAS/IPS/IFS and allied services), with long-term job security and nationwide impact.",
+        "if_avoided": "You keep flexibility to enter the private sector sooner, without the multi-year, high-competition preparation timeline this path usually needs.",
+        "if_alt_chosen": "If the full UPSC track feels too long, State PSC exams or Public Sector Undertaking (PSU) recruitment offer a related, often shorter path with similar public-service value.",
+        "trend_now": "Selection increasingly rewards structured, syllabus-aligned preparation over rote memorisation, with growing weight on ethics and current-affairs analysis.",
+        "trend_10y": "Governance is steadily digitising — future officers are expected to be comfortable with data-driven policy tools alongside traditional administrative skills."
+    },
+    "civil_engineering": {
+        "title": "Civil Engineering — Structural, Infrastructure & Construction Management",
+        "logic_expression": "Coding_Optional AND Physical_Systems_Interest AND Structured_Thinking",
+        "relevant_streams": ["Civil Engineering", "Diploma / Polytechnic"],
+        "prereqs": [
+            "Structural analysis & design fundamentals",
+            "AutoCAD / civil design software (e.g. STAAD.Pro, Revit)",
+            "Site execution & project management basics",
+            "Relevant licensing/certification for your region",
+        ],
+        "if_taken": "Direct role in building the physical infrastructure — buildings, roads, water systems — with steady, widespread demand across both public and private projects.",
+        "if_avoided": "You avoid site-heavy, often outdoor and physically demanding work, but move away from hands-on infrastructure creation.",
+        "if_alt_chosen": "If pure structural design appeals more than site execution, specialising early toward structural or geotechnical engineering narrows the same degree into a more design-focused role.",
+        "trend_now": "Rising use of Building Information Modelling (BIM) and sustainable/green construction practices.",
+        "trend_10y": "Greater integration of smart-infrastructure sensors and AI-assisted design checks, with engineers focusing more on oversight, safety, and sustainability judgment."
+    },
 }
 
 INSPIRATIONAL_QUOTES = [
@@ -149,9 +210,14 @@ st.markdown("""
     /* Keep Streamlit's own widgets (inputs, sidebar) readable on the dark base */
     section[data-testid="stSidebar"] { background: rgba(15,32,39,0.85); }
     .stTextInput input, .stTextInput>div>div, .stSelectbox>div>div {
-        background: rgba(255,255,255,0.9) !important;
-        color: #0f172a !important;
+        background: #0a0a0a !important;
+        color: #ffffff !important;
+        border: 1px solid #4b5563 !important;
     }
+    .stTextInput input::placeholder { color: #9ca3af !important; }
+    /* Streamlit's built-in show/hide-password eye icon — make it visible on black */
+    .stTextInput button svg { fill: #ffffff !important; opacity: 0.9; }
+    .stTextInput button:hover svg { opacity: 1; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -380,10 +446,18 @@ else:
         else:
             target_key = "ui_ux_design"
 
+        # Route students on a Civil Services or Civil Engineering track to the
+        # field-specific path rather than the generic four-way split above.
+        stream_category = STREAM_CATEGORY.get(st.session_state.user_stream, "Other")
+        if stream_category == "Civil Services":
+            target_key = "civil_services"
+        elif stream_category == "Civil Engineering":
+            target_key = "civil_engineering"
+
         # Nudge toward a stream-relevant path if the direct match doesn't fit their stream
         record = KNOWLEDGE_BASE[target_key]
-        if st.session_state.user_stream and st.session_state.user_stream not in record["relevant_streams"]:
-            alt = next((k for k, v in KNOWLEDGE_BASE.items() if st.session_state.user_stream in v["relevant_streams"]), None)
+        if stream_category and stream_category not in record["relevant_streams"]:
+            alt = next((k for k, v in KNOWLEDGE_BASE.items() if stream_category in v["relevant_streams"]), None)
             if alt:
                 st.caption(f"Note: this also draws on paths common for your stream ({st.session_state.user_stream}).")
 
@@ -395,6 +469,7 @@ else:
         <p>✅ <b>If you pursue this:</b> {record['if_taken']}</p>
         <p>⚠️ <b>If you avoid this:</b> {record['if_avoided']}</p>
         <p>🔁 <b>If you'd rather try something adjacent:</b> {record['if_alt_chosen']}</p>
+        <p>🚀 <b>Path to achieving this:</b> If you deliberately build the skills listed below, you're on a realistic track to reach {record['title']}. If you continue without that extra effort, you'll more likely land in an adjacent, less specialised role rather than this one.</p>
         </div>
         """, unsafe_allow_html=True)
 
